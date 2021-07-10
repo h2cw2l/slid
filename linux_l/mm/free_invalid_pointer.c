@@ -5,7 +5,7 @@
 
 int main()
 {
-    char * addr = malloc(16);
+    char *addr = malloc(16);
     if (NULL == addr)
     {
         printf("malloc failed \n");
@@ -13,5 +13,6 @@ int main()
     }
 
     free(addr + 1);
+
     return 0;
 }
