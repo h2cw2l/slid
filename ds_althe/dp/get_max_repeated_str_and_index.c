@@ -43,30 +43,30 @@ struct result *get_max_len_repeated_str_and_its_idx(char *str)
     
     for (i = 0; i < len - 1; i++)
     {
-	    idx_tmp = 0;
-	    len_tmp = 0;
-	    k = 0;
+	idx_tmp = 0;
+	len_tmp = 0;
+	k = 0;
         for(j = i + 1; j < len;)
         {
-			k = 0;
+	    k = 0;
             if (gstr[j] == gstr[i]) {
-			    idx_tmp = j;
-				len_tmp = 1;
-				k++;
-				while (gstr[j + k] == gstr[i + k]) {
-					len_tmp++;
-					k++;
-				}
-				if (len_tmp > ret->len) {
-				    ret->len = len_tmp;
-					ret->idxo = i;
-					ret->idx = idx_tmp;
-				}
-				j++; /* 忘记循环变量要进行驱动 */
-			} else {
-			    j++;
-			}
-	    }
+	        idx_tmp = j;
+		len_tmp = 1;
+		k++;
+		while (gstr[j + k] == gstr[i + k]) {
+		    len_tmp++;
+		    k++;
+		}
+		if (len_tmp > ret->len) {
+		    ret->len = len_tmp;
+		    ret->idxo = i;
+		    ret->idx = idx_tmp;
+		}
+		j++; /* 忘记循环变量要进行驱动 */
+	    } else {
+	        j++;
+            }
+	}
     }
 
     return ret;
