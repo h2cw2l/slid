@@ -1,0 +1,1 @@
+cmd_/home/wyl/code/slid/linux_l/mod/uio/uio_test.ko := ld -r -m elf_x86_64 -z max-page-size=0x200000 -T ./scripts/module-common.lds --build-id  -o /home/wyl/code/slid/linux_l/mod/uio/uio_test.ko /home/wyl/code/slid/linux_l/mod/uio/uio_test.o /home/wyl/code/slid/linux_l/mod/uio/uio_test.mod.o ;  true
