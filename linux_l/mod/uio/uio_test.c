@@ -58,12 +58,12 @@ static int drv_kpart_probe(struct device *dev)
 {
     printk("drv_kpart_probe(%p)\n",dev);
     kpart_info.mem[0].addr = (unsigned long)kmalloc(1024,GFP_KERNEL);
-    
+    printk("uio addr 0x%lx\n", kpart_info.mem[0].addr);    
     if(kpart_info.mem[0].addr == 0)
         return -ENOMEM;
     kpart_info.mem[0].memtype = UIO_MEM_LOGICAL;
     kpart_info.mem[0].size = 1024;
-
+    dump_stack();
     if(uio_register_device(dev,&kpart_info))
         return -ENODEV;
     return 0;
@@ -72,6 +72,7 @@ static int drv_kpart_probe(struct device *dev)
 static int drv_kpart_remove(struct device *dev)
 {
     uio_unregister_device(&kpart_info);
+    dump_stack();
     return 0;
 }
 

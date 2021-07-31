@@ -25,4 +25,4 @@ __attribute__((section(".modinfo"))) =
 "depends=uio";
 
 
-MODULE_INFO(srcversion, "C66ED50DD25C66449DEA6AA");
+MODULE_INFO(srcversion, "468B2A22CE319099D75A408");
