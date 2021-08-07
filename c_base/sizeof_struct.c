@@ -11,6 +11,7 @@ struct test {
     int e[1];
 };
 
+int a[];
 
 int main()
 {
@@ -23,6 +24,12 @@ int main()
 
     printf("test0 %p\n", test0);
     printf("e %p\n", test0->e);
-
+    printf("0 a %p\n", a);
+    a[1] = 0;
+    printf("1 a %p, a[1] %d\n", a, a[1]);
+    for (int i = 0; i < 8192; i++) {
+        a[i] = i;
+        printf("i %d, val %d\n", i, a[i]);
+    }
     return 0;
 }
