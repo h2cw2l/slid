@@ -14,6 +14,8 @@ d     e    h     i
     f          j   k
 */
 char *tib = "a(b(d,e(f)),c(h,i(j,k)))";
+char result[STACK_SIZE] = {'\0'};
+int ri = 0;
 
 struct node {
     char data;
@@ -120,4 +122,15 @@ void preOrder(struct node *root)
     preOrder(root->right);
 
     return;
+}
+
+void list_to_bracket(struct node *root, int lr_flag)
+{
+    if (root == NULL) {
+        return;
+    }
+    
+    
+
+
 }
