@@ -29,6 +29,10 @@ int idx = 0;
 struct node *bracket_to_list(char *str);
 void preOrder(struct node *root);
 
+char bra_str[32] = {'\0'};
+int  str_idx = 0;
+void list_to_bracket(struct node *root);
+
 int stack_push(struct node *np)
 {
     printf("stack push idx %d, data %c\n", idx, np->data);
@@ -56,8 +60,41 @@ int main()
     struct node *root = bracket_to_list(tib);
     printf("root %c\n", root->data);
     preOrder(root);
+    printf("\norigin str: %s\n", tib);
+    list_to_bracket(root);
+    printf("\n %s \n", bra_str);
     return 0;
 }
+
+void list_to_bracket(struct node *root)
+{
+    if (root == NULL) {
+        return;
+    }
+
+    bra_str[str_idx] = root->data;
+    str_idx++;
+    if ((root->left) || (root->right)) {
+        bra_str[str_idx] = '(';
+        str_idx++;
+        
+        if (root->left) {
+            list_to_bracket(root->left);
+        }
+
+        if (root->right) {
+            bra_str[str_idx] = ',';
+            str_idx++;
+            list_to_bracket(root->right);
+        }
+
+        bra_str[str_idx] = ')';
+        str_idx++;
+    }
+    
+    return;
+}
+
 struct node *bracket_to_list(char *str)
 {
     struct node *last = NULL;
@@ -122,15 +159,4 @@ void preOrder(struct node *root)
     preOrder(root->right);
 
     return;
-}
-
-void list_to_bracket(struct node *root, int lr_flag)
-{
-    if (root == NULL) {
-        return;
-    }
-    
-    
-
-
 }
