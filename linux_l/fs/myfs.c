@@ -4,23 +4,25 @@
 #include <linux/mount.h>
 #include <linux/init.h>
 #include <linux/namei.h>
+#include <linux/cred.h>
+
 
 #define MYFS_MAGIC 0x64668735
 
 static struct vfsmount *myfs_mount;
 static int myfs_mount_count;
 
-static struct inode *myfs_get_inode(struct super_block *sb, int mod, dev_t dev)
+static struct inode *myfs_get_inode(struct super_block *sb, int mode, dev_t dev)
 {
     struct inode *inode = new_inode(sb);
 
     if (inode) {
         inode->i_mode = mode;
-        inode->i_uid = current->fsuid;
-        inode->i_gid = current->fsgid;
-        inode->iblksize = PAGE_CACHE_SIZE;
+        inode->i_uid = current_fsuid();
+        inode->i_gid = current_fsgid();
+        // inode->i_blksize = VMACACHE_SIZE;
         inode->i_blocks = 0;
-        inode->i_atime = inoe->i_mtime = inode->i_ctime = CURRENT_TIME;
+        inode->i_atime = inode->i_mtime = inode->i_ctime = current_time(inode);
         switch (mode & S_IFMT) {
             default:
                 init_special_inode(inode, mode, dev);
@@ -32,7 +34,7 @@ static struct inode *myfs_get_inode(struct super_block *sb, int mod, dev_t dev)
                 inode->i_op = &simple_dir_inode_operations;
                 inode->i_fop = &simple_dir_operations;
                 printk("create a dir file\n");
-                inode->i_nlink++;
+                inc_nlink(inode);
                 break;
         }
     }
@@ -47,7 +49,7 @@ static int myfs_mknod(struct inode *dir, struct dentry *dentry, int mode, dev_t 
     int error = -EPERM;
 
     if (dentry->d_inode) {
-        return --EEXIST;
+        return -EEXIST;
     }
 
     inode = myfs_get_inode(dir->i_sb, mode, dev);
@@ -66,7 +68,7 @@ static int myfs_mkdir(struct inode *dir, struct dentry *dentry, int mode)
 
     res = myfs_mknod(dir, dentry, mode | S_IFDIR, 0);
     if (!res) {
-        dir->i_nlink++;
+        inc_nlink(dir);
     }
 
     return res;
@@ -77,10 +79,10 @@ static int myfs_create(struct inode *dir, struct dentry *dentry, int mode)
     return myfs_mknod(dir, dentry, mode | S_IFREG, 0);
 }
 
-static iny myfs_fill_super(struct super_block *sb, void *data, int silent)
+static int myfs_fill_super(struct super_block *sb, void *data, int silent)
 {
     static struct tree_descr debug_files[] = {{""}};
-    return simple_fill_super(sb, MYFS_MAGIC, dbeug_files);
+    return simple_fill_super(sb, MYFS_MAGIC, debug_files);
 }
 
 static struct super_block *myfs_get_sb(struct file_system_type *fs_type,
@@ -92,11 +94,11 @@ static struct super_block *myfs_get_sb(struct file_system_type *fs_type,
 static struct file_system_type myfs_type = {
     .owner = THIS_MODULE,
     .name  = "myfs",
-    .get_sb = myfs_get_sb,
+    .mount = myfs_get_sb,
     .kill_sb = kill_litter_super,
 };
 
-static int myfs_create_by_name(const cjar *name, mode_t mode,
+static int myfs_create_by_name(const char *name, mode_t mode,
                                struct dentry *parent, struct dentry **dentry)
 {
     int error = 0;
@@ -117,9 +119,9 @@ static int myfs_create_by_name(const cjar *name, mode_t mode,
     }
 
     *dentry = NULL;
-    mutex_lock(&parent->d_inode->i_mutex);
+    inode_lock(d_inode(parent));
     &dentry = lookup_one_len(name, parent, strlen(name));
-    if (IIS_ERR(dentry)) {
+    if (IS_ERR(dentry)) {
         if ((mode & S_IFMT) == S_IFDIR) {
             error = myfs_mkdir(parent->d_inode, *dentry, mode);
         } else {
@@ -128,7 +130,7 @@ static int myfs_create_by_name(const cjar *name, mode_t mode,
     } else {
         error = PTR_ERR(dentry);
     }
-    mutex_unlock(&parent->d_inode->i_mutex);
+    inode_unlock(d_inode(parent));
 
     return error;
 }
@@ -148,7 +150,7 @@ struct dentry *myfs_create_file(const char *name, mode_t mode,
     }
     if (dentry->d_inode) {
         if (data) {
-            dentry->d_inode->u.generic_ip = data;
+            dentry->d_inode->i_private = data;
         } else {
             dentry->d_inode->i_fop = fops;
         }
@@ -161,10 +163,10 @@ exit:
 static int myfs_create_dir(const char *name, struct dentry *parent)
 {
     return myfs_create_file(name, S_IFDIR | S_IRWXU | S_IRUGO | S_IXUGO,
-                            parent, NULL. NULL);
+                            parent, NULL, NULL);
 }
 
-static int __init myfs_init()
+static int __init myfs_init(void)
 {
     int retval;
     struct dentry *pslot;
@@ -180,19 +182,19 @@ static int __init myfs_init()
     }
 
     pslot = myfs_create_dir("woman star", NULL);
-    myfs_create_file("lbb", S_IFREG | s_IRUGO, pslot, NULL, NULL);
-    myfs_create_file("fbb", S_IFREG | S_IRUGO. pslot, NULL, NULL);
+    myfs_create_file("lbb", S_IFREG | S_IRUGO, pslot, NULL, NULL);
+    myfs_create_file("fbb", S_IFREG | S_IRUGO, pslot, NULL, NULL);
     myfs_create_file("ljl", S_IFREG | S_IRUGO, pslot, NULL, NULL);
 
     pslot = myfs_create_dir("man star", NULL);
-    myfs_create("ldh", S_IFREG | S_IRUGO. pslot, NULL, NULL);
-    myfs_create("lcw", S_IFREG | S_IRUGO, pslot, NULL, NULL);
-    myfs_create("jw",  S_IFREG | S_IRUGO, pslot, NULL, NULL);
+    myfs_create_file("ldh", S_IFREG | S_IRUGO, pslot, NULL, NULL);
+    myfs_create_file("lcw", S_IFREG | S_IRUGO, pslot, NULL, NULL);
+    myfs_create_file("jw",  S_IFREG | S_IRUGO, pslot, NULL, NULL);
  
     return retval;    
 }
 
-static void __exit myfs_exit()
+static void __exit myfs_exit(void)
 {
     simple_release_fs(&myfs_mount, &myfs_mount_count);
     unregister_filesystem(&myfs_type);
