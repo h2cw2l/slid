@@ -85,10 +85,10 @@ static int myfs_fill_super(struct super_block *sb, void *data, int silent)
     return simple_fill_super(sb, MYFS_MAGIC, debug_files);
 }
 
-static struct super_block *myfs_get_sb(struct file_system_type *fs_type,
+static struct dentry *myfs_get_sb(struct file_system_type *fs_type,
                                        int flags, const char *dev_name, void *data)
 {
-    return get_sb_single(fs_type, flags, data, myfs_fill_super);
+    return mount_single(fs_type, flags, data, myfs_fill_super);
 }
 
 static struct file_system_type myfs_type = {
@@ -120,7 +120,7 @@ static int myfs_create_by_name(const char *name, mode_t mode,
 
     *dentry = NULL;
     inode_lock(d_inode(parent));
-    &dentry = lookup_one_len(name, parent, strlen(name));
+    *dentry = lookup_one_len(name, parent, strlen(name));
     if (IS_ERR(dentry)) {
         if ((mode & S_IFMT) == S_IFDIR) {
             error = myfs_mkdir(parent->d_inode, *dentry, mode);
@@ -143,7 +143,7 @@ struct dentry *myfs_create_file(const char *name, mode_t mode,
     int error;
  
     printk("myfs: creating file %s\n", name);
-    error = myfs_create_byname(name, mode, parent, &dentry);
+    error = myfs_create_by_name(name, mode, parent, &dentry);
     if (error) {
         dentry = NULL;
         goto exit;
